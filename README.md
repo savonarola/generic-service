@@ -30,6 +30,9 @@ name: doghouse-mortage
 instance: prod
 namespace: doghouse-services
 
+imagePullSecrets:
+- name: dogcker-secret
+
 env:
   - name: RAILS_ENV
     value: "production"
@@ -70,6 +73,7 @@ deployments:
     containers:
       - name: app
         image: docker.io/dog-bank/doghouse-mortage
+        imageTag: latest # otherwise, appVersion is used, see Usage
         resources:
           limits:
             cpu: 1000m
@@ -193,3 +197,17 @@ configmaps:
         }
 
 ```
+
+## Usage
+
+Assume you have an app called `doghouse-mortage` of version 0.1.2.
+
+* Make value file for your service, e.g. `doghouse-mortage.yaml`.
+* Run installation command
+```bash
+helm3 upgrade --install doghouse-mortage https://github.com/savonarola/generic-service/archive/refs/tags/v0.0.1.tar.gz --set appVersion=0.1.2 -f doghouse-mortage.yaml
+```
+
+## LICENSE
+
+[MIT](LICENSE)
