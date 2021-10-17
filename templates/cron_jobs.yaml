@@ -1,0 +1,135 @@
+{{ $secretRefs := .Values.secretRefs }}
+{{ $env := .Values.env }}
+{{ $namespace := .Values.namespace }}
+{{- range .Values.cron_jobs }}
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "generic-service.name" $ }}-{{ .name }}
+  labels:
+    {{- include "generic-service.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: cron
+  namespace: {{ $namespace }}
+spec:
+  schedule: "{{ .schedule }}"
+  successfulJobsHistoryLimit: {{ .successfulJobsHistoryLimit | default 0 }}
+  failedJobsHistoryLimit: {{ .failedJobsHistoryLimit | default 1 }}
+  concurrencyPolicy: {{ .concurrencyPolicy | default "Forbid" }}
+
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: {{ .restartPolicy | default "Never" }}
+        {{- with $.Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+          {{- if .initContainers }}
+          initContainers:
+          {{- range .initContainers }}
+            - name: {{ .name }}
+              image: "{{ .image }}:{{ .image_tag | default $.Values.appVersion }}"
+              imagePullPolicy: {{ .pullPolicy | default "Always" }}
+
+              {{- if .volumeMounts }}
+              volumeMounts:
+                {{- toYaml .volumeMounts | nindent 16 }}
+              {{- end }}
+
+              {{- if .args }}
+              args:
+                {{- toYaml .args | nindent 16 }}
+              {{- end }}
+              resources:
+                {{- toYaml .resources | nindent 16 }}
+              {{- if or .env $env }}
+              env:
+              {{- if .env }}
+                {{- toYaml .env | nindent 16 }}
+              {{- else if $env }}
+                {{- toYaml $env | nindent 16 }}
+              {{- end }}
+              {{- end }}
+              {{- if or $secretRefs .secretRefs }}
+              envFrom:
+              {{- if $secretRefs }}
+              {{- range $secretRefs }}
+              - secretRef:
+                  name: {{ . }}
+              {{- end }}
+              {{- else if .secretRefs }}
+              {{- range .secretRefs }}
+              - secretRef:
+                  name: {{ . }}
+              {{- end }}
+              {{- end }}
+              {{- end }}
+          {{- end }}
+
+          {{- end }}
+          containers:
+          {{- range .containers }}
+            - name: {{ .name }}
+              image: "{{ .image }}:{{ .image_tag | default $.Values.appVersion }}"
+              imagePullPolicy: {{ .pullPolicy | default "Always" }}
+              {{- if .volumeMounts }}
+              volumeMounts:
+                {{- toYaml .volumeMounts | nindent 16 }}
+              {{- end }}
+              {{- if .ports }}
+              ports:
+                {{- toYaml .ports | nindent 16 }}
+              {{- end }}
+              {{- if .livenessProbe }}
+              livenessProbe:
+                {{- toYaml .livenessProbe | nindent 16 }}
+              {{- end }}
+              {{- if .readinessProbe }}
+              readinessProbe:
+                {{- toYaml .readinessProbe | nindent 16 }}
+              {{- end }}
+              {{- if .args }}
+              args:
+                {{- toYaml .args | nindent 16 }}
+              {{- end }}
+              resources:
+                {{- toYaml .resources | nindent 16 }}
+              {{- if or .env $env }}
+              env:
+              {{- if .env }}
+                {{- toYaml .env | nindent 16 }}
+              {{- else if $env }}
+                {{- toYaml $env | nindent 16 }}
+              {{- end }}
+              {{- end }}
+              {{- if or $secretRefs .secretRefs }}
+              envFrom:
+              {{- if $secretRefs }}
+              {{- range $secretRefs }}
+              - secretRef:
+                  name: {{ . }}
+              {{- end }}
+              {{- else if .secretRefs }}
+              {{- range .secretRefs }}
+              - secretRef:
+                  name: {{ . }}
+              {{- end }}
+              {{- end }}
+              {{- end }}
+          {{- end }}
+          {{- if .nodeSelector }}
+          nodeSelector:
+            {{- toYaml .nodeSelector | nindent 12 }}
+          {{- end }}
+        {{- if .affinity }}
+          affinity:
+            {{- toYaml .affinity | nindent 12 }}
+        {{- end }}
+        {{- if .tolerations }}
+          tolerations:
+            {{- toYaml .tolerations | nindent 12 }}
+        {{- end }}
+
+{{- end }}

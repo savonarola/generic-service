@@ -1,0 +1,15 @@
+{{ $namespace := .Values.namespace }}
+{{- range .Values.configmaps }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ $namespace }}
+  name: {{ include "generic-service.name" $ }}-{{ .name }}
+  labels:
+    {{- include "generic-service.labels" $ | nindent 4 }}
+data:
+  {{- .data | toYaml | nindent 2 }}
+
+{{- end }}
+

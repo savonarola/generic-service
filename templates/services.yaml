@@ -1,0 +1,26 @@
+{{ $namespace := .Values.namespace }}
+{{- range .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "generic-service.name" $ }}-{{ .name }}
+  labels:
+    {{- include "generic-service.labels" $ | nindent 4 }}
+  namespace: {{ $namespace }}
+spec:
+  type: ClusterIP
+  {{- if .headless }}
+  clusterIP: None
+  {{- else }}
+  ports:
+    - port: {{ .port | default 80 }}
+      targetPort: {{ .targetPort | default "http" }}
+      protocol: TCP
+      name: {{ .portName | default "http" }}
+  {{- end }}
+  selector:
+    {{- include "generic-service.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ .component }}
+
+{{- end }}

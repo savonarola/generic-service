@@ -1,0 +1,158 @@
+{{ $secretRefs := .Values.secretRefs }}
+{{ $env := .Values.env }}
+{{ $namespace := .Values.namespace }}
+{{- range .Values.deployments }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "generic-service.name" $ }}-{{ .name }}
+  labels:
+    {{- include "generic-service.labels" $ | nindent 4 }}
+  namespace: {{ $namespace }}
+spec:
+  replicas: {{ .replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "generic-service.selectorLabels" $ | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "generic-service.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ .name }}
+    spec:
+    {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- $instantConfigs := .instantConfigs -}}
+    {{- if or .volumes .instantConfigs }}
+      volumes:
+      {{- if .volumes -}}
+        {{- toYaml .volumes | nindent 8 }}
+      {{- end }}
+      {{- if .instantConfigs }}
+        - name: instant-configs
+          configMap:
+            name: nginx-rules-config
+      {{- end }}
+    {{- end }}
+      {{- if .initContainers }}
+      initContainers:
+      {{- range .initContainers }}
+        - name: {{ .name }}
+          image: "{{ .image }}:{{ .image_tag | default $.Values.appVersion }}"
+          imagePullPolicy: {{ .pullPolicy | default "Always" }}
+
+          {{- if or .volumeMounts $instantConfigs }}
+          volumeMounts:
+          {{- if .volumeMounts -}}
+            {{- toYaml .volumeMounts | nindent 12 }}
+          {{- end }}
+          {{- if $instantConfigs }}
+            - mountPath: "/srv/projects/instant_configs/current/access_rules"
+              name: instant-configs
+          {{- end }}
+          {{- end }}
+
+          {{- if .args }}
+          args:
+            {{- toYaml .args | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- if or .env $env }}
+          env:
+          {{- if .env }}
+            {{- toYaml .env | nindent 12 }}
+          {{- else if $env }}
+            {{- toYaml $env | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- if or $secretRefs .secretRefs }}
+          envFrom:
+          {{- if $secretRefs }}
+          {{- range $secretRefs }}
+          - secretRef:
+              name: {{ . }}
+          {{- end }}
+          {{- else if .secretRefs }}
+          {{- range .secretRefs }}
+          - secretRef:
+              name: {{ . }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+      {{- end }}
+
+      {{- end }}
+      containers:
+      {{- range .containers }}
+        - name: {{ .name }}
+          image: "{{ .image }}:{{ .image_tag | default $.Values.appVersion }}"
+          imagePullPolicy: {{ .pullPolicy | default "Always" }}
+          {{- if or .volumeMounts $instantConfigs }}
+          volumeMounts:
+          {{- if .volumeMounts -}}
+            {{- toYaml .volumeMounts | nindent 12 }}
+          {{- end }}
+          {{- if $instantConfigs }}
+            - mountPath: "/srv/projects/instant_configs/current/access_rules"
+              name: instant-configs
+          {{- end }}
+          {{- end }}
+          {{- if .ports }}
+          ports:
+            {{- toYaml .ports | nindent 12 }}
+          {{- end }}
+          {{- if .livenessProbe }}
+          livenessProbe:
+            {{- toYaml .livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .readinessProbe }}
+          readinessProbe:
+            {{- toYaml .readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .args }}
+          args:
+            {{- toYaml .args | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .resources | nindent 12 }}
+          {{- if or .env $env }}
+          env:
+          {{- if .env }}
+            {{- toYaml .env | nindent 12 }}
+          {{- else if $env }}
+            {{- toYaml $env | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- if or $secretRefs .secretRefs }}
+          envFrom:
+          {{- if $secretRefs }}
+          {{- range $secretRefs }}
+          - secretRef:
+              name: {{ . }}
+          {{- end }}
+          {{- else if .secretRefs }}
+          {{- range .secretRefs }}
+          - secretRef:
+              name: {{ . }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+      {{- end }}
+      {{- if .nodeSelector }}
+      nodeSelector:
+        {{- toYaml .nodeSelector | nindent 8 }}
+      {{- end }}
+    {{- if .affinity }}
+      affinity:
+        {{- toYaml .affinity | nindent 8 }}
+    {{- end }}
+    {{- if .tolerations }}
+      tolerations:
+        {{- toYaml .tolerations | nindent 8 }}
+    {{- end }}
+
+{{- end }}
