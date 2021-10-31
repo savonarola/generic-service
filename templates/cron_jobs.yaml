@@ -42,8 +42,10 @@ spec:
               args:
                 {{- toYaml .args | nindent 16 }}
               {{- end }}
+              {{- if .resources }}
               resources:
                 {{- toYaml .resources | nindent 16 }}
+              {{- end }}
               {{- if or .env $env }}
               env:
               {{- if .env }}
@@ -94,8 +96,10 @@ spec:
               args:
                 {{- toYaml .args | nindent 16 }}
               {{- end }}
+              {{- if .resources }}
               resources:
                 {{- toYaml .resources | nindent 16 }}
+              {{- end }}
               {{- if or .env $env }}
               env:
               {{- if .env }}
