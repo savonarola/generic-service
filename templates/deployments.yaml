@@ -25,16 +25,10 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- $instantConfigs := .instantConfigs -}}
-    {{- if or .volumes .instantConfigs }}
+    {{- if .volumes }}
       volumes:
       {{- if .volumes -}}
         {{- toYaml .volumes | nindent 8 }}
-      {{- end }}
-      {{- if .instantConfigs }}
-        - name: instant-configs
-          configMap:
-            name: nginx-rules-config
       {{- end }}
     {{- end }}
       {{- if .initContainers }}
@@ -44,15 +38,9 @@ spec:
           image: "{{ .image }}:{{ .image_tag | default $.Values.appVersion }}"
           imagePullPolicy: {{ .pullPolicy | default "Always" }}
 
-          {{- if or .volumeMounts $instantConfigs }}
+          {{- if .volumeMounts }}
           volumeMounts:
-          {{- if .volumeMounts -}}
             {{- toYaml .volumeMounts | nindent 12 }}
-          {{- end }}
-          {{- if $instantConfigs }}
-            - mountPath: "/srv/projects/instant_configs/current/access_rules"
-              name: instant-configs
-          {{- end }}
           {{- end }}
 
           {{- if .args }}
@@ -93,15 +81,9 @@ spec:
         - name: {{ .name }}
           image: "{{ .image }}:{{ .image_tag | default $.Values.appVersion }}"
           imagePullPolicy: {{ .pullPolicy | default "Always" }}
-          {{- if or .volumeMounts $instantConfigs }}
+          {{- if .volumeMounts }}
           volumeMounts:
-          {{- if .volumeMounts -}}
             {{- toYaml .volumeMounts | nindent 12 }}
-          {{- end }}
-          {{- if $instantConfigs }}
-            - mountPath: "/srv/projects/instant_configs/current/access_rules"
-              name: instant-configs
-          {{- end }}
           {{- end }}
           {{- if .ports }}
           ports:
