@@ -3,7 +3,7 @@
 {{ $namespace := .Values.namespace }}
 {{- range .Values.cron_jobs }}
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ include "generic-service.name" $ }}-{{ .name }}
