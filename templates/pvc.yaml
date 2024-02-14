@@ -1,0 +1,14 @@
+{{ $secretRefs := .Values.secretRefs }}
+{{ $env := .Values.env }}
+{{ $namespace := .Values.namespace }}
+{{- range .Values.pvcs }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "generic-service.name" $ }}-{{ .name }}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    {{- toYaml .resources | nindent 4 }}
+{{- end }}
