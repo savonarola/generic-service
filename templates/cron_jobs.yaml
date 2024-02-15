@@ -22,10 +22,16 @@ spec:
       template:
         spec:
           restartPolicy: {{ .restartPolicy | default "Never" }}
-        {{- with $.Values.imagePullSecrets }}
+          {{- with $.Values.imagePullSecrets }}
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
-        {{- end }}
+          {{- end }}
+          {{- if .volumes }}
+          volumes:
+          {{- if .volumes -}}
+            {{- toYaml .volumes | nindent 12 }}
+          {{- end }}
+          {{- end }}
           {{- if .initContainers }}
           initContainers:
           {{- range .initContainers }}
