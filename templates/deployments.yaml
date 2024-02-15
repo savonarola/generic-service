@@ -66,7 +66,8 @@ spec:
           - secretRef:
               name: {{ . }}
           {{- end }}
-          {{- else if .secretRefs }}
+          {{- end }}
+          {{- if .secretRefs }}
           {{- range .secretRefs }}
           - secretRef:
               name: {{ . }}
@@ -120,7 +121,8 @@ spec:
           - secretRef:
               name: {{ . }}
           {{- end }}
-          {{- else if .secretRefs }}
+          {{- end }}
+          {{- if .secretRefs }}
           {{- range .secretRefs }}
           - secretRef:
               name: {{ . }}
